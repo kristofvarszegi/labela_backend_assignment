@@ -15,7 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from autocompany import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path("api/cart/product/add", views.add_product_to_cart),
+    # path("api/cart/product/remove", views.remove_product_from_cart),
+    # path("api/cart/delivery-datetime/set", views.set_delivery_datetime),
+    # path("api/cart/submit", views.submit_order),
+    path("api/product/all", views.get_all_products),
+    # path("api/product/<id:TODO>/details", views.get_product_details),
+    path("admin/", admin.site.urls),
 ]
