@@ -1,12 +1,7 @@
-import json
-from django.http import HttpResponseServerError, JsonResponse
+from rest_framework import viewsets
+
 from autocompany.models import Product  # ORDER_STATUS_IN_CART, Order, OrderItem
-
-
-def return_default_error(e: Exception):
-    return HttpResponseServerError(
-        f"Error: {e}"
-    )  # TODO proper error categorization and messaging; HTTP code
+from autocompany.serializers import ProductSerializer
 
 
 """def add_product_to_cart(request):
@@ -91,21 +86,7 @@ def submit_order(request):
 """
 
 
-def get_all_products(request):
-    try:
-        products = Product.objects.all()
-        serialized_products = [
-            {"name": product.name, "details": product.details} for product in products
-        ]
-        return JsonResponse({"products": serialized_products})
-    except Exception as e:
-        return_default_error(e)
-
-
-"""def get_product_details(request):
-    try:
-        # TODO
-        pass
-    except Exception as e:
-        return_default_error(e)
-"""
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    # TODO handle if a product with the same name already exists

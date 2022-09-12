@@ -1,7 +1,12 @@
+import json
 from django.db import models
 from datetime import datetime, timedelta
 
 APP_LABEL = "autocompany"
+
+ID_LABEL = "id"
+DETAILS_LABEL = "details"
+NAME_LABEL = "name"
 
 
 class Product(models.Model):
@@ -26,7 +31,7 @@ class Order(models.Model):
     order_items = models.ManyToOneRel(
         OrderItem, on_delete=models.CASCADE, related_name="Order"
     )
-    status = models.IntegerField()  # TODO PositiveIntegerField?
+    status = models.PositiveIntegerField()
     delivery_datetime = models.DateTimeField()  # TODO
 
     def has_product(self, product: Product):
