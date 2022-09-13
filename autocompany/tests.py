@@ -1,12 +1,15 @@
 import json
 from django.test import TestCase
+from rest_framework import status
 
 from autocompany.models import ID_LABEL, NAME_LABEL, DETAILS_LABEL
+from autocompany.views import PRODUCT_ID_LABEL
 
 
+# TODO assert response HTTP status codes too
 class ProductApiTest(TestCase):
     @staticmethod
-    def create_product_objects():
+    def create_dummy_product_objects():
         products = list()
         products.append(
             {
@@ -28,10 +31,14 @@ class ProductApiTest(TestCase):
         )
         return products
 
-    def test_list_products(self):
-        products_to_upload = ProductApiTest.create_product_objects()
+    def upload_dummy_products(self):
+        products_to_upload = ProductApiTest.create_dummy_product_objects()
         for product in products_to_upload:
             self.client.post("/products/", data=product)
+        return products_to_upload
+
+    def test_list_products(self):
+        products_to_upload = self.upload_dummy_products()
         response = self.client.get("/products/")
         products_downloaded = json.loads(response.content)
         self.assertEqual(len(products_downloaded), len(products_to_upload))
@@ -41,9 +48,7 @@ class ProductApiTest(TestCase):
                 self.assertEqual(products_downloaded[i][key], product_to_upload[key])
 
     def test_list_product_names(self):
-        products_to_upload = ProductApiTest.create_product_objects()
-        for product in products_to_upload:
-            self.client.post("/products/", data=product)
+        products_to_upload = self.upload_dummy_products()
         response = self.client.get("/products/?fields=id,name")
         products_downloaded = json.loads(response.content)
         self.assertEqual(len(products_downloaded), len(products_to_upload))
@@ -55,7 +60,7 @@ class ProductApiTest(TestCase):
             )
 
     def test_retrieve_product_details(self):
-        products_to_upload = ProductApiTest.create_product_objects()
+        products_to_upload = ProductApiTest.create_dummy_product_objects()
         products_uploaded = list()
         for product in products_to_upload:
             response = self.client.post("/products/", data=product)
@@ -70,3 +75,10 @@ class ProductApiTest(TestCase):
         self.assertIn(ID_LABEL, product_detail_downloaded)
         for key in [ID_LABEL, DETAILS_LABEL]:
             self.assertEqual(product_detail_downloaded[key], test_product_uploaded[key])
+
+    def test_add_product_to_cart(self):
+        self.upload_dummy_products()
+        product = {PRODUCT_ID_LABEL: 2}
+        response = self.client.post("/orders/", data=product)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # TODO Finish

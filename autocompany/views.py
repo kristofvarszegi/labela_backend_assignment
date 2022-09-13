@@ -1,33 +1,42 @@
-from rest_framework import viewsets
+import json
+from django.contrib.auth.models import User
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-from autocompany.models import Product  # ORDER_STATUS_IN_CART, Order, OrderItem
+from autocompany.models import ORDER_STATUS_IN_CART, Order, Product
 from autocompany.serializers import ProductSerializer
 
 
-"""def add_product_to_cart(request):
-    print(request.body)
-    try:
-        customer_id = 0  # TODO
-        shopping_carts = Order.objects.filter(
-            customer_id__eq=customer_id, status__eq=ORDER_STATUS_IN_CART
-        )
-        shopping_cart_count = len(shopping_carts)
-        assert shopping_cart_count < 2
-        if shopping_cart_count == 1:
-            shopping_cart = shopping_carts[0]
-        else:
-            shopping_cart = Order(customer_id)  # TODO implement/needed?
-        # product = TODO
-        if shopping_cart.has_product(product):
-            return HttpResponse("Aready in cart")  # TODO HTTP code
-        else:
-            shopping_cart.add_product(product)
-            return HttpResponse("Added")  # TODO HTTP code
-    except Exception as e:
-        return_default_error(e)
+PRODUCT_ID_LABEL = "product_id"
 
 
-def remove_product_from_cart(request):
+@api_view(["POST"])
+def add_product_to_cart(request):
+    # FIXME Write serializer for Product
+    product_id = json.loads(request.body)[PRODUCT_ID_LABEL]
+    customer_id = 2  # TODO 1 cart per user instead of the current single global cart
+    shopping_carts = Order.objects.filter(
+        user_id=customer_id, status=ORDER_STATUS_IN_CART
+    )
+    shopping_cart_count = len(shopping_carts)
+    assert shopping_cart_count < 2
+    if shopping_cart_count == 1:
+        shopping_cart = shopping_carts[0]
+    else:
+        user = User.objects.get(pk=customer_id)
+        shopping_cart = Order.objects.create(
+            user=user, status=ORDER_STATUS_IN_CART
+        ).get()
+    # product = TODO
+    if shopping_cart.has_product(product_id):
+        return Response("Aready in cart", status=status.HTTP_400_BAD_REQUEST)
+    else:
+        shopping_cart.add_product(product_id)
+        return Response("Added", status.HTTP_200_OK)
+
+
+"""def remove_product_from_cart(request):
     try:
         customer_id = 0  # TODO
         shopping_carts = Order.objects.filter(

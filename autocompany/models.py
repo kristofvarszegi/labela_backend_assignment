@@ -1,6 +1,7 @@
 import json
-from django.db import models
 from datetime import datetime, timedelta
+from django.db import models
+from django.contrib.auth.models import User
 
 APP_LABEL = "autocompany"
 
@@ -17,43 +18,30 @@ class Product(models.Model):
         app_label = APP_LABEL
 
 
-"""ORDER_STATUS_IN_CART = 0
+ORDER_STATUS_IN_CART = 0
 ORDER_STATUS_SUBMITTED = 1
 ORDER_STATUS_EN_ROUTE = 2
 ORDER_STATUS_DELIVERED = 3
 
 
 class Order(models.Model):
-    # TODO use properties
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="Order"
-    )
-    order_items = models.ManyToOneRel(
-        OrderItem, on_delete=models.CASCADE, related_name="Order"
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Order")
     status = models.PositiveIntegerField()
-    delivery_datetime = models.DateTimeField()  # TODO
+    delivery_datetime = models.DateTimeField(default=None, blank=True, null=True)
 
-    def has_product(self, product: Product):
-        return (
-            len(
-                filter(
-                    lambda order_item: order_item.product_id == product.id,
-                    OrderItems.objects.filter(order_id__eq=shopping_cart.id),
-                )
-            )
-            > 0
-        )
+    def has_product(self, product_id: int):
+        return OrderItem.objects.filter(
+            order_id=self.id, product_id=product_id
+        ).exists()
 
-    def add_product(self, product: Product):
+    def add_product(self, product_id: int):
         if self.status != ORDER_STATUS_IN_CART:
             raise ValueError(
-                f"Cannot add product {product} to order {self.id}: order has already been submitted."
+                f"Cannot add product {product_id} to order {self.id}: order has already been submitted."
             )  # TODO find a more exact error type for this case
-        order_item = OrderItem(self, product)
-        order_item.save()
+        OrderItem.objects.create(order=self, product_id=product_id)
 
-    def remove_product(self, product: Product):
+    """def remove_product(self, product: Product):
         if self.status != ORDER_STATUS_IN_CART:
             raise ValueError(
                 f"Cannot remove product {product} from order {self.id}: order has already been submitted"
@@ -86,12 +74,9 @@ class Order(models.Model):
             self.status = ORDER_STATUS_SUBMITTED  # TODO ask the PO and the architect about interfacing with the payment and delivery systems
         else:
             # TODO
-            pass
+            pass"""
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="OrderItem")
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="Product"
-    )
-"""
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
