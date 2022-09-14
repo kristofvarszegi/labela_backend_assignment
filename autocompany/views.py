@@ -15,6 +15,7 @@ from .constants import (
     ORDER_STATUS_IN_CART,
     PRODUCT_ID_LABEL,
     STATUS_LABEL,
+    TEST_USER_ID,
     USER_ID_LABEL,
 )
 from .models import Order, OrderItem, Product
@@ -49,6 +50,12 @@ class CartManager(APIView):
         return Response(f"Cart of user {user_id} is empty", status=http_status)
 
     def get(self, _, user_id):
+        # TODO resolve after user authentication added
+        if user_id != TEST_USER_ID:
+            return Response(
+                "User ID must be 2 at the current development stage",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if (cart := CartManager.get_cart(user_id)) is None:
             return CartManager.create_response_cart_is_empty(
                 user_id, status.HTTP_204_NO_CONTENT
