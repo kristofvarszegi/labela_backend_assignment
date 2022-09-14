@@ -1,15 +1,33 @@
 import json
+from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework import status
 
-from autocompany.models import ID_LABEL, NAME_LABEL, DETAILS_LABEL
-from autocompany.views import PRODUCT_ID_LABEL
+from .models import OrderItem, Product, DETAILS_LABEL, ID_LABEL, NAME_LABEL
+from .views import (
+    ITEMS_LABEL,
+    ORDER_ID_LABEL,
+    PRODUCT_ID_LABEL,
+    TEST_USER_ID,
+    USER_ID_LABEL,
+)
 
 
-# TODO assert response HTTP status codes too
 class ProductApiTest(TestCase):
-    @staticmethod
-    def create_dummy_product_objects():
+    @classmethod
+    def setUpClass(cls):
+        super(ProductApiTest, cls).setUpClass()
+        cls.setUp_users()
+        cls.setUp_products()
+
+    @classmethod
+    def setUp_users(self):
+        User.objects.create(username="user1", password="user1234")
+        User.objects.create(username="user2", password="user1234")
+        User.objects.create(username="user3", password="user1234")
+
+    @classmethod
+    def setUp_products(self):
         products = list()
         products.append(
             {
@@ -29,56 +47,93 @@ class ProductApiTest(TestCase):
                 DETAILS_LABEL: "The comfortable Sparco driver's seat",
             }
         )
-        return products
+        for product in products:
+            Product.objects.create(name=product["name"], details=product["details"])
 
-    def upload_dummy_products(self):
-        products_to_upload = ProductApiTest.create_dummy_product_objects()
-        for product in products_to_upload:
-            self.client.post("/products/", data=product)
-        return products_to_upload
+    def add_products_to_cart(self, user_id: int, product_ids: list):
+        for product_id in product_ids:
+            response = self.client.post(
+                f"/cart/{user_id}/",
+                content_type="application/json",
+                data={PRODUCT_ID_LABEL: product_id},
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def get_and_assert_cart(self, user_id, product_ids: list):
+        response = self.client.get(f"/cart/{user_id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        cart = json.loads(response.content)
+        self.assertEqual(cart[USER_ID_LABEL], user_id)
+        self.assertEqual(len(cart[ITEMS_LABEL]), len(product_ids))
+        for i, order_item in enumerate(cart[ITEMS_LABEL]):
+            self.assertEqual(order_item[ORDER_ID_LABEL], cart[ID_LABEL])
+            self.assertEqual(order_item[PRODUCT_ID_LABEL], product_ids[i])
 
     def test_list_products(self):
-        products_to_upload = self.upload_dummy_products()
+        prepopulated_products = list(Product.objects.all())
         response = self.client.get("/products/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         products_downloaded = json.loads(response.content)
-        self.assertEqual(len(products_downloaded), len(products_to_upload))
-        for i, product_to_upload in enumerate(products_to_upload):
-            self.assertIn(ID_LABEL, products_downloaded[i])
-            for key in [DETAILS_LABEL, NAME_LABEL]:
-                self.assertEqual(products_downloaded[i][key], product_to_upload[key])
-
-    def test_list_product_names(self):
-        products_to_upload = self.upload_dummy_products()
-        response = self.client.get("/products/?fields=id,name")
-        products_downloaded = json.loads(response.content)
-        self.assertEqual(len(products_downloaded), len(products_to_upload))
-        for i, product_to_upload in enumerate(products_to_upload):
-            self.assertEqual(len(products_downloaded[i].keys()), 2)  # id, name
+        self.assertEqual(len(products_downloaded), len(prepopulated_products))
+        for i, prepopulated_product in enumerate(prepopulated_products):
             self.assertIn(ID_LABEL, products_downloaded[i])
             self.assertEqual(
-                products_downloaded[i][NAME_LABEL], product_to_upload[NAME_LABEL]
+                products_downloaded[i][NAME_LABEL], prepopulated_product.name
+            )
+            self.assertEqual(
+                products_downloaded[i][DETAILS_LABEL], prepopulated_product.details
+            )
+
+    def test_list_product_names(self):
+        prepopulated_products = list(Product.objects.all())
+        response = self.client.get("/products/?fields=id,name")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        downloaded_products = json.loads(response.content)
+        self.assertEqual(len(downloaded_products), len(prepopulated_products))
+        for i, prepopulated_product in enumerate(prepopulated_products):
+            self.assertEqual(len(downloaded_products[i].keys()), 2)  # id, name
+            self.assertIn(ID_LABEL, downloaded_products[i])
+            self.assertEqual(
+                downloaded_products[i][NAME_LABEL], prepopulated_product.name
             )
 
     def test_retrieve_product_details(self):
-        products_to_upload = ProductApiTest.create_dummy_product_objects()
-        products_uploaded = list()
-        for product in products_to_upload:
-            response = self.client.post("/products/", data=product)
-            products_uploaded.append(json.loads(response.content))
-        self.assertEqual(len(products_uploaded), len(products_to_upload))
-        test_product_uploaded = products_uploaded[0]
+        prepopulated_products = list(Product.objects.all())
+        prepopulated_product = prepopulated_products[0]
         response = self.client.get(
-            f"/products/{test_product_uploaded[ID_LABEL]}/?fields=id,details"
+            f"/products/{prepopulated_product.id}/?fields=id,details"
         )
-        product_detail_downloaded = json.loads(response.content)
-        self.assertEqual(len(product_detail_downloaded.keys()), 2)  # id, name
-        self.assertIn(ID_LABEL, product_detail_downloaded)
-        for key in [ID_LABEL, DETAILS_LABEL]:
-            self.assertEqual(product_detail_downloaded[key], test_product_uploaded[key])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        retrieved_product = json.loads(response.content)
+        self.assertEqual(len(retrieved_product.keys()), 2)  # id, name
+        self.assertIn(ID_LABEL, retrieved_product)
+        self.assertEqual(retrieved_product[ID_LABEL], prepopulated_product.id)
+        self.assertEqual(retrieved_product[DETAILS_LABEL], prepopulated_product.details)
 
     def test_add_product_to_cart(self):
-        self.upload_dummy_products()
-        product = {PRODUCT_ID_LABEL: 2}
-        response = self.client.post("/orders/", data=product)
+        user_id = TEST_USER_ID
+
+        product_ids = [2]
+        self.add_products_to_cart(user_id, product_ids)
+
+        self.get_and_assert_cart(user_id, product_ids)
+
+    def test_remove_product_from_cart(self):
+        user_id = TEST_USER_ID
+
+        product_ids_to_add = [2, 3]
+        self.add_products_to_cart(user_id, product_ids_to_add)
+
+        product_id_to_remove = 2
+        response = self.client.delete(
+            f"/cart/{user_id}/",
+            content_type="application/json",
+            data={PRODUCT_ID_LABEL: product_id_to_remove},
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # TODO Finish
+        remaining_product_ids = [
+            product_id
+            for product_id in product_ids_to_add
+            if product_id != product_id_to_remove
+        ]
+        self.get_and_assert_cart(user_id, remaining_product_ids)

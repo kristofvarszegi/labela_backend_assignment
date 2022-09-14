@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from autocompany.models import Product, ID_LABEL, NAME_LABEL, DETAILS_LABEL
+from .models import Order, Product, ID_LABEL, NAME_LABEL, DETAILS_LABEL
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -26,3 +26,13 @@ class ProductSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Product
         fields = [ID_LABEL, NAME_LABEL, DETAILS_LABEL]
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = [
+            "user",
+            "status",
+            "delivery_datetime",
+        ]  # TODO the frontend would probably need the order items too

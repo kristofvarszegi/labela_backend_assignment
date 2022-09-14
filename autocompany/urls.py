@@ -24,6 +24,7 @@ router.register(r"products", views.ProductViewSet, basename="products")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("orders/", views.add_product_to_cart),
     path("admin/", admin.site.urls),
+    path("cart/<int:user_id>/", views.CartManager.as_view()),
 ]
+# TODO define urls by referencing views instead of hardcoding
