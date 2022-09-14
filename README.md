@@ -8,7 +8,7 @@
 2. Run the image: ```docker-compose up -d --build```
 3. Migrate: ```docker-compose exec web python manage.py migrate```
 4. (Optional) Run the feature tests: ```docker-compose exec web python manage.py test```
-5. Create a Django superuser (will get user ID 1): ```docker-compose exec web python manage.py createuser```
+5. Create a Django superuser (will get user ID 1): ```docker-compose exec web python manage.py createsuperuser```
 6. On the Django admin page create a simple user (will have the id 2)
 7. Start the app: ```docker-compose exec web python manage.py runserver 127.0.0.1:8001```
 8. Add products on the Django admin page or via API like: ```curl -XPOST "http://127.0.0.1:8000/products/" -H "Content-Type: application/json" -d '{"name": "Lexani Rim Set", "details": "The beautiful Lexani Rim set"}'```
