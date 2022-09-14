@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Order, Product, ID_LABEL, NAME_LABEL, DETAILS_LABEL
+from .constants import DETAILS_LABEL, ID_LABEL, NAME_LABEL
+from .models import Order, Product
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):

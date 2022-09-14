@@ -13,8 +13,8 @@
 | All my products in a database | DONE | Migrate using Django to have the tables in the db. Add products on the Django admin page.
 | Add a product to my shopping cart | DONE | |
 | Remove a product from my shopping cart | DONE | |
-| Order the current contents in my shopping cart | TODO | |
-| Select a delivery date and time | TODO | |
+| Order the current contents in my shopping cart | DONE | |
+| Select a delivery date and time | DONE | |
 | See an overview of all the products | DONE | |
 | View the details of a product | DONE | |
 | Use Postgres w/ Docker | TODO | |
@@ -27,3 +27,4 @@
 * See TODOs in the code
 * 1 cart per user instead of the current single global cart
 * User authentication & authorizations
+* Time zone support

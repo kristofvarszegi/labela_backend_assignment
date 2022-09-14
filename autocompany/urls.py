@@ -26,5 +26,10 @@ urlpatterns = [
     path("", include(router.urls)),
     path("admin/", admin.site.urls),
     path("cart/<int:user_id>/", views.CartManager.as_view()),
+    path(
+        "cart/<int:user_id>/delivery-datetime/",
+        views.set_delivery_datetime,
+    ),
+    path("cart/<int:user_id>/submit/", views.submit),
 ]
 # TODO define urls by referencing views instead of hardcoding
