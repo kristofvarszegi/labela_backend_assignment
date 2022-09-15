@@ -10,12 +10,12 @@
 4. (Optional) Run the feature tests: ```docker-compose exec web python manage.py test```
 5. Create a Django superuser (will get user ID 1): ```docker-compose exec web python manage.py createsuperuser```
 6. On the Django admin page create a simple user (will have the id 2)
-7. Start the app: ```docker-compose exec web python manage.py runserver 127.0.0.1:8001```
-8. Add products on the Django admin page or via API like: ```curl -XPOST "http://127.0.0.1:8000/products/" -H "Content-Type: application/json" -d '{"name": "Lexani Rim Set", "details": "The beautiful Lexani Rim set"}'```
-9. (Optional) Check the products you added: ```curl -XGET "http://127.0.0.1:8000/products/"```
-10. (Optional) Check the details of a product: ```curl -XGET "http://127.0.0.1:8000/products/1/?fields/id,details"```
-11. Add products to the cart like: ```curl -XPOST "http://127.0.0.1:8000/cart/2/" -H "Content-Type: application/json" -d '{"product_id": 1}'```
-12. Check the cart contents: ```curl -XGET "http://127.0.0.1:8000/cart/2/"```
+7. Add products on the Django admin page or via API like: ```curl -XPOST "http://127.0.0.1:8000/products/" -H "Content-Type: application/json" -d '{"name": "Lexani Rim Set", "details": "The beautiful Lexani Rim set"}'```
+8. (Optional) Check the products you added: ```curl -XGET "http://127.0.0.1:8000/products/"```
+9. (Optional) Check the details of a product: ```curl -XGET "http://127.0.0.1:8000/products/1/?fields=id,details"```
+10. Add products to the cart like: ```curl -XPOST "http://127.0.0.1:8000/cart/2/" -H "Content-Type: application/json" -d '{"product_id": 1}'```
+11. Check the cart contents: ```curl -XGET "http://127.0.0.1:8000/cart/2/"```
+12. Try the rest of the features using the available endpoints
 
 # Acceptance checklist
 
